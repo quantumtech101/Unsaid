@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Things Unsaid</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
+
+    <div class="max-w-2xl mx-auto p-6">
+
+        <!-- HEADER -->
+        <h1 class="text-3xl font-bold text-center mb-2">
+            Things I Wanted To Say
+        </h1>
+
+        <p class="text-gray-400 text-center mb-6">
+            Anonymous confessions, real-time thoughts
+        </p>
+
+        <!-- INPUT CARD -->
+        <div class="bg-gray-800/50 backdrop-blur p-4 rounded-xl border border-gray-700 mb-6">
+
+            <textarea
+                id="message"
+                class="w-full p-3 rounded bg-gray-900 text-white outline-none resize-none"
+                rows="3"
+                placeholder="Write something..."
+            ></textarea>
+
+            <button
+                id="postBtn"
+                class="mt-3 w-full bg-pink-600 hover:bg-pink-500 transition px-4 py-2 rounded-lg font-semibold"
+            >
+                Post Anonymously
+            </button>
+
+        </div>
+
+        <!-- FEED -->
+        <div id="feed" class="space-y-4"></div>
+
+    </div>
+
+</body>
+
+<script type="module" src="app.js"></script>
+</html>
+
