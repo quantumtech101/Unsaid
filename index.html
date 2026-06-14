@@ -1,78 +1,670 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Things Unsaid</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Things Unsaid</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
 
-    <!-- TailwindCSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #000;
+    color: #e7e9ea;
+    min-height: 100svh;
+    -webkit-font-smoothing: antialiased;
+  }
 
-    <style>
-        @keyframes likePop {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(1.4); }
-            100% { transform: scale(1); }
-        }
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2f3336; border-radius: 99px; }
 
-        .like-animate {
-            animation: likePop 0.25s ease;
-        }
-    </style>
+  /* ── Layout ── */
+  #app {
+    max-width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid #2f3336;
+    border-right: 1px solid #2f3336;
+    min-height: 100svh;
+    position: relative;
+  }
+
+  /* ── Sticky header ── */
+  #header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid #2f3336;
+    padding: 14px 16px 0;
+  }
+  #header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  #header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin: 0;
+    line-height: 1;
+  }
+  #header p {
+    font-size: 12px;
+    color: #536471;
+    margin: 2px 0 0;
+  }
+  #user-badge {
+    font-size: 12px;
+    color: #71767b;
+    background: #16181c;
+    border: 1px solid #2f3336;
+    padding: 5px 12px;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    user-select: none;
+  }
+  #user-badge:hover { border-color: #1d9bf0; color: #e7e9ea; }
+
+  /* ── Filter tabs ── */
+  #tabs { display: flex; }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #71767b;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    letter-spacing: -0.1px;
+  }
+  .tab-btn:hover { background: rgba(255,255,255,0.04); color: #e7e9ea; }
+  .tab-btn.active { color: #e7e9ea; border-bottom-color: #1d9bf0; }
+
+  /* ── Compose ── */
+  #compose {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #2f3336;
+  }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+    flex-shrink: 0;
+    color: #fff;
+    user-select: none;
+  }
+  .avatar.sm { width: 32px; height: 32px; font-size: 12px; }
+  .avatar.xs { width: 26px; height: 26px; font-size: 11px; }
+
+  #compose-right { flex: 1; min-width: 0; }
+  #message {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #e7e9ea;
+    font-size: 18px;
+    font-family: 'Inter', sans-serif;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+    min-height: 56px;
+    overflow: hidden;
+    display: block;
+  }
+  #message::placeholder { color: #536471; }
+  #compose-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid #2f3336;
+    margin-top: 6px;
+  }
+  #char-ring-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #char-ring {
+    width: 22px; height: 22px;
+    transform: rotate(-90deg);
+  }
+  #char-ring circle {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+  #char-ring .track { stroke: #2f3336; }
+  #char-ring .fill  { stroke: #1d9bf0; transition: stroke-dashoffset 0.1s, stroke 0.1s; }
+  #char-remaining {
+    font-size: 12px;
+    color: #71767b;
+    min-width: 20px;
+    text-align: right;
+    display: none;
+  }
+  #post-btn {
+    background: #1d9bf0;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 8px 18px;
+    border-radius: 99px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.1px;
+  }
+  #post-btn:hover:not(:disabled) { background: #1a8cd8; }
+  #post-btn:disabled { opacity: 0.45; cursor: default; }
+
+  /* ── New posts banner ── */
+  #new-banner {
+    display: none;
+    position: sticky;
+    top: 115px;
+    z-index: 40;
+    margin: 0;
+    background: #1d9bf0;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #1a8cd8;
+  }
+  #new-banner:hover { background: #1a8cd8; }
+
+  /* ── Skeleton ── */
+  @keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #16181c 25%, #1e2124 50%, #16181c 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  .skeleton-post {
+    padding: 16px;
+    border-bottom: 1px solid #2f3336;
+    display: flex;
+    gap: 12px;
+  }
+  .skeleton-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+  .skeleton-line { height: 12px; }
+
+  /* ── Post cards ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .post-card {
+    padding: 14px 16px;
+    border-bottom: 1px solid #2f3336;
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.12s;
+    animation: fadeIn 0.18s ease both;
+  }
+  .post-card:hover { background: rgba(255,255,255,0.025); }
+  .post-card:active { background: rgba(255,255,255,0.045); }
+
+  .post-right { flex: 1; min-width: 0; }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .post-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e7e9ea;
+    letter-spacing: -0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .post-handle {
+    font-size: 14px;
+    color: #71767b;
+    white-space: nowrap;
+  }
+  .post-dot { color: #71767b; font-size: 14px; }
+  .post-time { font-size: 14px; color: #71767b; white-space: nowrap; }
+  .you-pill {
+    font-size: 11px;
+    color: #1d9bf0;
+    border: 1px solid rgba(29,155,240,0.3);
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .trending-pill {
+    margin-left: auto;
+    font-size: 11px;
+    color: #f91880;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .trending-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #f91880;
+    flex-shrink: 0;
+  }
+
+  .post-body {
+    font-size: 15px;
+    line-height: 1.55;
+    color: #e7e9ea;
+    margin: 0 0 12px;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* ── Action buttons ── */
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: -8px;
+  }
+  .act-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #71767b;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    font-family: 'Inter', sans-serif;
+    line-height: 1;
+    user-select: none;
+  }
+  .act-btn svg { flex-shrink: 0; }
+  .act-btn.reply-act:hover  { color: #1d9bf0; background: rgba(29,155,240,0.1); }
+  .act-btn.like-act:hover   { color: #f91880; background: rgba(249,24,128,0.1); }
+  .act-btn.like-act.liked   { color: #f91880; }
+  .act-btn.like-act.liked svg path { fill: #f91880; stroke: #f91880; }
+
+  /* double tap ripple */
+  @keyframes tapRipple {
+    0%   { transform: scale(0.5); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .tap-ripple {
+    position: absolute;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(249,24,128,0.35);
+    pointer-events: none;
+    animation: tapRipple 0.4s ease forwards;
+    transform-origin: center;
+    z-index: 10;
+  }
+
+  @keyframes likePop {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.5); }
+    65%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+  .like-pop { animation: likePop 0.3s ease; }
+
+  /* ── Reply box ── */
+  .reply-box {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #2f3336;
+    gap: 10px;
+  }
+  .reply-box.open { display: flex; }
+  .reply-right { flex: 1; min-width: 0; }
+  .reply-textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #2f3336;
+    color: #e7e9ea;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    resize: none;
+    outline: none;
+    padding: 4px 0 8px;
+    min-height: 36px;
+    overflow: hidden;
+    line-height: 1.5;
+    display: block;
+  }
+  .reply-textarea::placeholder { color: #536471; }
+  .reply-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .send-reply-btn {
+    background: #1d9bf0;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 99px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .send-reply-btn:hover:not(:disabled) { background: #1a8cd8; }
+  .send-reply-btn:disabled { opacity: 0.45; cursor: default; }
+
+  /* ── Replies thread ── */
+  .replies-section { margin-top: 8px; }
+  .show-replies-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d9bf0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .show-replies-btn:hover { opacity: 0.8; }
+  .replies-list {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 8px;
+    padding-left: 12px;
+    border-left: 2px solid #2f3336;
+  }
+  .replies-list.open { display: flex; }
+  .reply-item {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .reply-body { flex: 1; min-width: 0; }
+  .reply-name { font-size: 13px; font-weight: 700; color: #e7e9ea; }
+  .reply-text { font-size: 14px; color: #e7e9ea; line-height: 1.5; margin-top: 2px; word-break: break-word; white-space: pre-wrap; }
+
+  /* ── Empty state ── */
+  #empty-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    text-align: center;
+    color: #536471;
+  }
+  #empty-state .empty-icon { font-size: 40px; margin-bottom: 16px; }
+  #empty-state h3 { font-size: 20px; font-weight: 700; color: #e7e9ea; margin: 0 0 6px; }
+  #empty-state p { font-size: 14px; margin: 0; }
+
+  /* ── Name modal ── */
+  #name-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  #name-modal.open { display: flex; }
+  #name-modal-box {
+    background: #16181c;
+    border: 1px solid #2f3336;
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 340px;
+  }
+  #name-modal-box h2 { font-size: 20px; font-weight: 700; margin: 0 0 6px; }
+  #name-modal-box p { font-size: 14px; color: #71767b; margin: 0 0 16px; }
+  #name-input {
+    width: 100%;
+    background: #000;
+    border: 1px solid #2f3336;
+    color: #e7e9ea;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    padding: 10px 14px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 12px;
+  }
+  #name-input:focus { border-color: #1d9bf0; }
+  #name-save-btn {
+    width: 100%;
+    background: #e7e9ea;
+    color: #000;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 10px;
+    border-radius: 99px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s;
+  }
+  #name-save-btn:hover { opacity: 0.9; }
+
+  /* ── Toast ── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(8px) scale(0.95); }
+  }
+  .toast {
+    background: #e7e9ea;
+    color: #000;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 99px;
+    white-space: nowrap;
+    animation: toastIn 0.2s ease;
+    font-family: 'Inter', sans-serif;
+  }
+  .toast.out { animation: toastOut 0.2s ease forwards; }
+
+  /* ── Theme toggle ── */
+  #theme-toggle {
+    background: none;
+    border: 1px solid #2f3336;
+    color: #71767b;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  #theme-toggle:hover { border-color: #71767b; color: #e7e9ea; }
+
+  /* ── Light mode ── */
+  body.light {
+    background: #fff;
+    color: #0f1419;
+  }
+  body.light #app { border-color: #eff3f4; }
+  body.light #header { background: rgba(255,255,255,0.85); border-color: #eff3f4; }
+  body.light .tab-btn { color: #536471; }
+  body.light .tab-btn:hover { background: rgba(0,0,0,0.03); color: #0f1419; }
+  body.light .tab-btn.active { color: #0f1419; }
+  body.light #user-badge { background: #f7f9f9; border-color: #eff3f4; color: #536471; }
+  body.light #compose { border-color: #eff3f4; }
+  body.light #message { color: #0f1419; }
+  body.light #compose-footer { border-color: #eff3f4; }
+  body.light .char-ring .track { stroke: #eff3f4; }
+  body.light .post-card { border-color: #eff3f4; }
+  body.light .post-card:hover { background: rgba(0,0,0,0.02); }
+  body.light .post-name { color: #0f1419; }
+  body.light .post-body { color: #0f1419; }
+  body.light .reply-box { border-color: #eff3f4; }
+  body.light .reply-textarea { border-color: #eff3f4; color: #0f1419; }
+  body.light .replies-list { border-color: #eff3f4; }
+  body.light .reply-name { color: #0f1419; }
+  body.light .reply-text { color: #0f1419; }
+  body.light .skeleton { background: linear-gradient(90deg, #f7f9f9 25%, #eff3f4 50%, #f7f9f9 75%); background-size: 600px 100%; }
+  body.light #empty-state h3 { color: #0f1419; }
+  body.light #name-modal-box { background: #fff; border-color: #eff3f4; }
+  body.light #name-input { background: #f7f9f9; border-color: #eff3f4; color: #0f1419; }
+  body.light #theme-toggle { border-color: #eff3f4; color: #536471; }
+  body.light #theme-toggle:hover { border-color: #cfd9de; color: #0f1419; }
+  body.light .skeleton-post { border-color: #eff3f4; }
+  body.light #new-banner { /* keep blue */ }
+  body.light .act-btn { color: #536471; }
+  body.light .toast { background: #0f1419; color: #fff; }
+  body.light #header h1 { color: #0f1419; }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, .post-card, .toast { animation: none !important; transition: none !important; }
+  }
+</style>
 </head>
+<body>
 
-<body class="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
+<div id="app">
 
-    <div class="max-w-2xl mx-auto p-6">
-
-        <!-- HEADER -->
-        <h1 class="text-3xl font-bold text-center mb-2">
-            Things I Wanted To Say But Never Did
-        </h1>
-
-        <p class="text-gray-400 text-center mb-6">
-            Inspired By: Geloy Conception
-        </p>
-
-        <!-- ================= FILTER BUTTONS ================= -->
-        <div class="flex gap-2 mb-4">
-
-            <button id="filterRecent"
-                class="flex-1 px-3 py-2 bg-pink-600 rounded font-semibold">
-                Recent
-            </button>
-
-            <button id="filterTrending"
-                class="flex-1 px-3 py-2 bg-gray-700 rounded font-semibold">
-                Trending
-            </button>
-
-        </div>
-
-        <!-- ================= INPUT BOX ================= -->
-        <div class="bg-gray-800/50 backdrop-blur p-4 rounded-xl border border-gray-700 mb-6">
-
-            <textarea
-                id="message"
-                class="w-full p-3 rounded bg-gray-900 text-white outline-none resize-none"
-                rows="3"
-                placeholder="Write something..."
-            ></textarea>
-
-            <button
-                id="postBtn"
-                class="mt-3 w-full bg-pink-600 hover:bg-pink-500 transition px-4 py-2 rounded-lg font-semibold">
-                Post Anonymously
-            </button>
-
-        </div>
-
-        <!-- ================= FEED ================= -->
-        <div id="feed" class="space-y-4"></div>
-
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-top">
+      <div>
+        <h1>🕊 Things I Wanted To Say But Never Did</h1>
+        <p>Inspired By:Geloy Conception</p>
+          <p>Anonymous Feed </p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="theme-toggle" title="Toggle theme" aria-label="Toggle light/dark mode">
+          <svg id="theme-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <div id="user-badge"></div>
+      </div>
     </div>
+    <div id="tabs">
+      <button class="tab-btn active" data-filter="recent">Recent</button>
+      <button class="tab-btn" data-filter="trending">Trending</button>
+    </div>
+  </div>
 
-    <script type="module" src="app.js"></script>
+  <!-- NEW POSTS BANNER -->
+  <div id="new-banner">↑ New posts — tap to load</div>
 
+  <!-- COMPOSE -->
+  <div id="compose">
+    <div id="compose-avatar" class="avatar"></div>
+    <div id="compose-right">
+      <textarea id="message" placeholder="What's on your mind?" rows="1"></textarea>
+      <div id="compose-footer">
+        <div id="char-ring-wrap">
+          <svg id="char-ring" width="22" height="22" viewBox="0 0 22 22">
+            <circle class="track" cx="11" cy="11" r="9" />
+            <circle class="fill"  cx="11" cy="11" r="9"
+              stroke-dasharray="56.5"
+              stroke-dashoffset="0" />
+          </svg>
+          <span id="char-remaining"></span>
+        </div>
+        <button id="post-btn" disabled>Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="feed"></div>
+  <div id="empty-state">
+    <div class="empty-icon">🕊</div>
+    <h3>Nothing here yet</h3>
+    <p>Be the first to say something unsaid.</p>
+  </div>
+
+</div>
+
+<!-- NAME MODAL -->
+<div id="name-modal">
+  <div id="name-modal-box">
+    <h2>Pick your handle</h2>
+    <p>This is how others will see you. You can change it any time.</p>
+    <input id="name-input" type="text" placeholder="e.g. Ghost_42" maxlength="24" autocomplete="off" spellcheck="false">
+    <button id="name-save-btn">Save handle</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script type="module" src="app.js"></script>
 </body>
 </html>
